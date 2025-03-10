@@ -26,7 +26,7 @@ Thumbs.db
 *.coveragerc
 
 # Ignore compiled files from Django migrations
-migrations/*
+/migrations/*
 
 # Ignore secret settings files
 settings.py
