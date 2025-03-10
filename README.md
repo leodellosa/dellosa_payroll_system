@@ -22,33 +22,33 @@ Prerequisites
 
 Installation
 1. Clone this repository to your local machine:
-git clone https://github.com/leodellosa/dellosa_payroll_system.git
-cd payroll-system
+- git clone https://github.com/leodellosa/dellosa_payroll_system.git
+- cd payroll-system
 
 2. Create a virtual environment to isolate project dependencies:
-python -m venv venv
+- python -m venv venv
 
 3. Activate the virtual environment:
-venv\Scripts\activate
+- venv\Scripts\activate
 
 4. Install the required Python packages:
-pip install -r requirements.txt
+- pip install -r requirements.txt
 
 5. Apply migrations to set up the SQLite database:
-python manage.py migrate
+- python manage.py migrate
 
 6. Create a superuser account to access the Django admin:
-python manage.py createsuperuser
-Follow the prompts to set up the superuser credentials.
+- python manage.py createsuperuser
+- Follow the prompts to set up the superuser credentials.
 
 7. Run the Django development server:
-python manage.py runserver
-The application will now be available at http://localhost:8000.
+- python manage.py runserver
+- The application will now be available at http://localhost:8000.
 
 8. Accessing Django Admin
 Once the server is running, you can access the Django Admin by visiting http://localhost:8000/admin/ and logging in with the superuser credentials you just created. From there, you can manage employees and payroll data.
 
-Stopping the Application
+9. Stopping the Application
 To stop the development server, simply press Ctrl+C in your terminal.
 
 
