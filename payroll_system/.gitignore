@@ -10,7 +10,6 @@ venv/
 # Django
 *.log
 db.sqlite3
-/static/
 media/
 
 # IDE Files
@@ -30,3 +29,6 @@ Thumbs.db
 
 # Ignore secret settings files
 settings.py
+
+# Ignore generated static files (collected by `collectstatic`)
+/productionfiles/
