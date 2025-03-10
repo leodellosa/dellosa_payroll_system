@@ -27,8 +27,5 @@ Thumbs.db
 # Ignore compiled files from Django migrations
 **/migrations/
 
-# Ignore secret settings files
-settings.py
-
 # Ignore generated static files (collected by `collectstatic`)
 /productionfiles/
