@@ -1,0 +1,113 @@
+{% extends "master.html" %}
+
+{% block title %}
+Payroll Dashboard
+{% endblock %}
+
+{% block content %}
+
+<!-- Main Content -->
+<div class="main-content">
+    <div class="container-fluid">
+        <!-- Top Metrics Row -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Employees</h5>
+                        <p class="card-text">{{ total_employees }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Payroll Processed</h5>
+                        <p class="card-text">${{ total_payroll|floatformat:2 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Payslip Generation Status</h5>
+                        <p class="card-text">{{ payslip_status }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Payslips Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Recent Payslips</h5>
+                        <ul>
+                            {% for payslip in recent_payslips %}
+                            <li>{{ payslip.employee_name }} - Date: {{ payslip.date }} -
+                                <a href="{{ payslip.download_link }}">Download</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Payslip Dates -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Upcoming Payslip Generation</h5>
+                        <p>Next payslip will be generated on: {{ next_payslip_date }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Employee Payslips Table -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Employee Payslips</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Employee Name</th>
+                                        <th>Gross Salary</th>
+                                        <th>Net Salary</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for employee in employees %}
+                                    <tr>
+                                        <td>{{ employee.name }}</td>
+                                        <td>${{ employee.gross_salary|floatformat:2 }}</td>
+                                        <td>${{ employee.net_salary|floatformat:2 }}</td>
+                                        <td>{{ employee.payslip_status }}</td>
+                                        <td>
+                                            <a href="{{ employee.payslip_download_link }}">View/Download</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2025 Payroll System | All Rights Reserved</p>
+    </div>
+</div>
+
+{% endblock %}
