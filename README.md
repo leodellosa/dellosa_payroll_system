@@ -8,13 +8,13 @@ With this application, you can:
 - View employee details, payroll, and statuses.
 
 Features
-#### Current Development
+#### Done Development
 - Employee Management: Add, view, and manage employee details.
-#### Current Task
-- Build the add employee feature
-#### Future Development
+#### Current Development
 - Payslip Generation: Generate payslips for employees.
-- SQLite Database: Uses SQLite for local storage of employee data.
+#### Current Task
+- Build the generate payroll feature
+
 
 Prerequisites
 - Python: Make sure Python 3.8+ is installed. You can download it from python.org.
