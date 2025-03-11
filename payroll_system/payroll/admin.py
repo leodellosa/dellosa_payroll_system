@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee
+from .models import Employee,Payroll
 
 # Register the models so that they appear in the admin interface
 
@@ -10,4 +10,5 @@ class EmployeeAdmin(admin.ModelAdmin):
 
 # Register the custom admin class with the model
 admin.site.register(Employee, EmployeeAdmin)
+admin.site.register(Payroll)
 

@@ -1,6 +1,7 @@
 {% load static bootstrap5 %}
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,14 +9,17 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet">
     {% bootstrap_css %}
 </head>
+
 <body>
     {% block navbar %}
-        {% include 'navbar.html' %}
+    {% include 'navbar.html' %}
     {% endblock %}
     {% block sidebar %}
-        {% include 'sidebar.html' %}
+    {% include 'sidebar.html' %}
     {% endblock %}
     {% block content %}
     {% endblock %}
+
 </body>
+
 </html>

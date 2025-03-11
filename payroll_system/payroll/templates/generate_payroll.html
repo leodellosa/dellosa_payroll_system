@@ -1,0 +1,89 @@
+{% extends "master.html" %}
+
+{% block title %}
+Generate Payroll - Payroll System
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <h1 class="mt-4">Generate Payroll</h1>
+
+        {% if messages %}
+        <div>
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                <p>{{ message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Payroll form -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="employee" class="form-label">Employee</label>
+                        {{ form.employee }}
+                        {% if form.employee.errors %}
+                        <div class="text-danger">
+                            {% for error in form.employee.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="gross_salary" class="form-label">Gross Salary</label>
+                        {{ form.gross_salary }}
+                        {% if form.gross_salary.errors %}
+                        <div class="text-danger">
+                            {% for error in form.gross_salary.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="deductions" class="form-label">Deductions</label>
+                        {{ form.deductions }}
+                        {% if form.deductions.errors %}
+                        <div class="text-danger">
+                            {% for error in form.deductions.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="pay_period" class="form-label">Pay Period</label>
+                        {{ form.pay_period }}
+                        {% if form.pay_period.errors %}
+                        <div class="text-danger">
+                            {% for error in form.pay_period.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary">Generate Payroll</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
