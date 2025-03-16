@@ -12,8 +12,10 @@ Features
 - Employee Management: Add, view, and manage employee details.
 #### Current Development
 - Payslip Generation: Generate payslips for employees.
-#### Current Task
-- Build the generate payroll feature
+#### Done Development
+- Build the generate payroll feature and viewing of payroll summary
+### Current Task
+- Separate payroll from employee and enhance app design
 
 
 Prerequisites
