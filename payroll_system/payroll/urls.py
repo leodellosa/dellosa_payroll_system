@@ -29,4 +29,6 @@ urlpatterns = [
     # Route to generate a payroll for an employee.
     # This will render the generatePayroll view to generate and possibly display payroll information.
     path('employee/generate_payroll/', views.generatePayroll, name='generate_payroll'),
+
+    path('employee/payroll_summary/', views.payrollSummary, name='payroll_summary'),
 ]

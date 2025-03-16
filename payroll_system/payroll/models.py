@@ -1,24 +1,22 @@
 from django.db import models
+from django.utils import timezone
 
 class Employee(models.Model):
     """
     Model representing an Employee.
 
-    This model is used to store employee-related information such as:
+    This model stores the following details about an employee:
     - first_name: The employee's first name.
     - last_name: The employee's last name.
-    - email: The employee's unique email address.
+    - email: The employee's email address (unique).
     - hire_date: The date when the employee was hired.
-    - position: The employee's job position within the company.
-    - status: The employment status of the employee (Active or Inactive).
-    
-    The `status` field is a choice field with two possible values: 'Active' and 'Inactive'.
-    By default, a new employee will have a status of 'Active'.
+    - position: The employee's job position.
+    - status: The employment status, which can be either 'Active' or 'Inactive'.
 
     Methods:
-        __str__: Returns a string representation of the employee, showing their full name.
+        __str__: Returns the full name of the employee in the format "First Name Last Name".
     """
-    
+
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -37,42 +35,64 @@ class Employee(models.Model):
 
     def __str__(self):
         """
-        String representation of the Employee object.
+        Returns a string representation of the Employee object, displaying the employee's full name.
 
-        Returns:
-            str: The full name of the employee.
+        Example:
+            "John Doe"
         """
         return f"{self.first_name} {self.last_name}"
-    
+
 
 class Payroll(models.Model):
     """
-    Model representing Payroll information for an employee.
+    Model representing the Payroll details of an Employee.
 
-    This model is used to store payroll details such as:
-    - employee: The Employee related to the payroll record (ForeignKey to Employee model).
-    - gross_salary: The total salary before deductions.
-    - deductions: The deductions applied to the gross salary (e.g., taxes, benefits).
-    - net_salary: The final salary after deductions (gross salary - deductions).
-    - pay_period: The pay period for which the payroll applies (e.g., 'January 2025').
+    This model stores payroll-related data for an employee for a specific period:
+    - employee: The employee for whom the payroll record is created.
+    - daily_rate: The employee's daily rate of pay.
+    - allowance: Any allowances provided to the employee.
+    - total_hours_worked: The total number of hours worked by the employee in the period.
+    - overtime_pay: The pay for any overtime worked by the employee.
+    - overtime_hour: The number of overtime hours worked.
+    - night_differential_pay: The pay for night differential hours worked.
+    - night_differential_hour: The number of night differential hours worked.
+    - deductions: Any deductions made from the employee's salary.
+    - deduction_remarks: Additional remarks related to the deductions.
+    - subtotal: The subtotal salary before deductions.
+    - net_salary: The final salary after deductions.
+    - date: The date for the payroll record (e.g., pay period date).
+    - time_in: The time the employee clocked in for the day.
+    - time_out: The time the employee clocked out for the day.
+    - project: An optional project associated with the employee's work.
     - created_at: The timestamp when the payroll record was created.
 
     Methods:
-        __str__: Returns a string representation of the payroll, showing the employee and the net salary.
+        __str__: Returns a string representation of the Payroll object, showing the employee and the date of the payroll.
     """
-    
+
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    gross_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    deductions = models.DecimalField(max_digits=10, decimal_places=2)
-    net_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    pay_period = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True) 
+    daily_rate = models.DecimalField(max_digits=10, decimal_places=2)
+    allowance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_hours_worked = models.DecimalField(max_digits=5, decimal_places=2)
+    overtime_pay = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    overtime_hour = models.DecimalField(max_digits=10, decimal_places=2)
+    night_differential_pay = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    night_differential_hour = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    deduction_remarks = models.CharField(max_length=200, blank=True, null=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    net_salary = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    date = models.DateField(default=timezone.now)
+    time_in = models.DateTimeField()
+    time_out = models.DateTimeField()
+    project = models.CharField(max_length=200, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         """
-        String representation of the Payroll object.
+        Returns a string representation of the Payroll object, showing the employee and the date of the payroll.
 
-        Returns:
-            str: A string representing the employee and their net salary.
+        Example:
+            "Leo Dellosa - 2025-03-15"
         """
-        return f'{self.employee} - {self.net_salary}'
+        return f'{self.employee} - {self.date}'

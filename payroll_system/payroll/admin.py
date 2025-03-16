@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee,Payroll
+from .models import Employee, Payroll
 
 # Register the models so that they appear in the admin interface
 

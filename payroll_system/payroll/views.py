@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import EmployeeForm, PayrollForm
 from .models import Employee, Payroll
 from django.contrib import messages
-from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 def employeeList(request):
     """
@@ -21,23 +21,7 @@ def employeeList(request):
     return render(request, 'employee_list.html', {'employees': employees})
 
 def dashboard(request):
-    """
-    View to display the dashboard page.
-
-    Retrieves statistics such as the total number of employees and other
-    dashboard-related data (currently commented-out) to pass to the template.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HttpResponse: Renders the dashboard.html template with employee statistics.
-    """
-    total_employees = Employee.objects.count()
-    context = {
-        'total_employees': total_employees,
-    }
-    return render(request, 'dashboard.html', context)
+    return redirect('employee_list')
 
 def addEmployee(request):
     """
@@ -55,12 +39,14 @@ def addEmployee(request):
         or redirects to the employee list if the form is valid.
     """
     if request.method == 'POST':
+        # print(request.POST)
         form = EmployeeForm(request.POST)
         
         if form.is_valid():
             form.save()
             return redirect('employee_list')
         else:
+            # print(form.errors)
             return render(request, 'add_employee.html', {'form': form})
     else:
         form = EmployeeForm()
@@ -147,48 +133,127 @@ def updateEmployeeStatus(request, employee_id):
 
 def generatePayroll(request):
     """
-    View to generate a payroll record for an employee.
+    View to generate payroll for an employee.
 
-    Displays a form for creating payroll entries, validates the form input,
-    and creates a payroll record in the database upon successful submission.
-    Displays success or error messages based on form validation results.
+    The form collects details such as time in, time out, total hours worked, deductions,
+    overtime pay, and night differential pay. It computes the gross salary, net salary, 
+    and the final payroll for the employee. The result is saved to the Payroll model.
 
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HttpResponse: Renders the 'generate_payroll.html' template with the form,
-        or redirects to the same page if payroll is successfully created.
+    - POST method: Handles payroll generation and saves the data.
+    - GET method: Displays an empty payroll form.
     """
     if request.method == 'POST':
         form = PayrollForm(request.POST)
+
         if form.is_valid():
+            # Get the employee and payroll details from the form
             employee = form.cleaned_data['employee']
-            gross_salary = form.cleaned_data['gross_salary']
+            time_in = form.cleaned_data['time_in']
+            time_out = form.cleaned_data['time_out']
+
+            if isinstance(time_in, str) and time_in:
+                time_in = parse_datetime(time_in)
+            if isinstance(time_out, str) and time_out:
+                time_out = parse_datetime(time_out)
+
+            total_hours_worked = form.cleaned_data['total_hours_worked']
             deductions = form.cleaned_data['deductions']
-            pay_period = form.cleaned_data['pay_period']
-            net_salary = form.cleaned_data['net_salary'] 
-
-            # Create the payroll record
-            payroll = Payroll.objects.create(
+            subtotal = form.cleaned_data['subtotal']
+            net_salary = form.cleaned_data['net_salary']
+            deduction_remarks = form.cleaned_data['deduction_remarks']
+            project = form.cleaned_data['project']
+            daily_rate = form.cleaned_data['daily_rate']
+            overtime_pay = form.cleaned_data['overtime_pay']
+            overtime_hour = form.cleaned_data['overtime_hour']
+            night_differential_pay = form.cleaned_data['night_differential_pay']
+            night_differential_hour = form.cleaned_data['night_differential_hour']
+            allowance = form.cleaned_data['allowance']
+            
+            # Creating a Payroll instance and saving it to the database
+            payroll = Payroll(
                 employee=employee,
-                gross_salary=gross_salary,
+                time_in=time_in,
+                time_out=time_out,
+                total_hours_worked=total_hours_worked,
                 deductions=deductions,
+                subtotal=subtotal,
                 net_salary=net_salary,
-                pay_period=pay_period,
-                created_at=timezone.now()
+                deduction_remarks=deduction_remarks,
+                project=project,
+                daily_rate=daily_rate,
+                overtime_pay = overtime_pay,
+                overtime_hour = overtime_hour,
+                night_differential_pay = night_differential_pay,
+                night_differential_hour = night_differential_hour,  
+                allowance = allowance
             )
-
+            print("valid",payroll)
             payroll.save()
-            messages.success(request, "Payroll generated successfully!")
-            return redirect('generate_payroll') 
+
+            # Notify the user that the payroll was successfully generated
+            messages.success(request, f"Payroll for {employee} has been successfully generated!")
+
+            # Redirect to another page, such as a summary of generated payroll
+            return redirect('payroll_summary')  # You can replace with the correct URL name or path
+
         else:
-            # Add error messages for the form fields that failed validation
+            # If the form is not valid, display errors
             for field in form:
                 for error in field.errors:
                     messages.error(request, f"Error in {field.label}: {error}")
+            return render(request, 'generate_payroll.html', {
+                'form': form,
+                'total_hours_worked': form.cleaned_data.get('total_hours_worked', 0),
+            })
+
     else:
         form = PayrollForm()
-        form.fields['employee'].queryset = Employee.objects.all()
+        return render(request, 'generate_payroll.html', {'form': form})
 
-    return render(request, 'generate_payroll.html', {'form': form})
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Employee, Payroll
+
+def payrollSummary(request):
+    """
+    View to display the payroll summary for all employees or a specific employee.
+
+    This view displays a list of generated payrolls, with the option to filter by employee.
+    The summary will show the payroll details such as the employee's name, pay period, 
+    gross salary, deductions, and net salary.
+    """
+    employees = Employee.objects.all()
+
+    # Default to show payroll summary for all employees
+    selected_employee = None
+    payrolls = Payroll.objects.all()
+
+    # Check if the form was submitted with a GET request
+    if request.method == 'GET':
+        selected_employee_id = request.GET.get('employee')
+        if selected_employee_id:
+            selected_employee = get_object_or_404(Employee, id=selected_employee_id)
+            payrolls = Payroll.objects.filter(employee=selected_employee)
+
+        # Calculate totals for the selected employee's payrolls
+        total_hours_worked = sum(payroll.total_hours_worked for payroll in payrolls)
+        total_overtime_pay = sum(payroll.overtime_pay for payroll in payrolls)
+        total_night_differential_pay = sum(payroll.night_differential_pay for payroll in payrolls)
+        allowance = sum(payroll.allowance for payroll in payrolls)
+        total_deductions = sum(payroll.deductions for payroll in payrolls)
+        total_gross_salary = sum(payroll.subtotal for payroll in payrolls)
+        total_net_salary = sum(payroll.net_salary for payroll in payrolls)
+
+        return render(request, 'payroll_summary.html', {
+            'payrolls': payrolls,
+            'employees': employees,
+            'selected_employee': selected_employee,
+            'total_hours_worked': total_hours_worked,
+            'total_overtime_pay': total_overtime_pay,
+            'total_night_differential_pay': total_night_differential_pay,
+            'allowance': allowance,
+            'total_deductions': total_deductions,
+            'total_gross_salary': total_gross_salary,
+            'total_net_salary': total_net_salary
+        })

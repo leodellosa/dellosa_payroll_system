@@ -1,6 +1,8 @@
+from decimal import Decimal
 from django import forms
 from .models import Employee, Payroll
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 class EmployeeForm(forms.ModelForm):
     """
@@ -12,101 +14,167 @@ class EmployeeForm(forms.ModelForm):
     - email: The email address of the employee.
     - hire_date: The date when the employee was hired.
     - position: The employee's job position.
+
+    The form will also validate the data to ensure that all necessary fields are filled.
     """
     class Meta:
-        model = Employee 
-        fields = ['first_name', 'last_name', 'email', 'hire_date', 'position'] 
+        model = Employee
+        fields = ['first_name', 'last_name', 'email', 'hire_date', 'position']
 
-class PayrollForm(forms.Form):
+class PayrollForm(forms.ModelForm):
     """
-    Form for generating and validating payroll details for an employee.
+    Form for creating and updating Payroll records.
 
-    This form is used to input payroll information, including:
-    - employee: The employee for whom the payroll is being generated.
-    - gross_salary: The gross salary before any deductions.
-    - deductions: The deductions from the gross salary (e.g., taxes, benefits).
-    - pay_period: The pay period for the payroll (in YYYY-MM-DD format).
+    This form handles the payroll processing for an employee, including:
+    - employee: The employee receiving the payroll.
+    - time_in: The time the employee started working on a particular day.
+    - time_out: The time the employee finished working on that day.
+    - total_hours_worked: The total number of hours worked by the employee on that day.
+    - overtime_pay: The pay received for overtime worked.
+    - overtime_hour: The number of overtime hours worked.
+    - deductions: The total deductions for the employee.
+    - subtotal: The subtotal salary before deductions.
+    - net_salary: The final salary after deductions.
+    - deduction_remarks: Any additional remarks related to the deductions.
+    - project: Optional project details for the employee's work.
+    - allowance: Any additional allowance added to the employee's pay.
+    - night_differential_hour: Number of night differential hours worked.
+    - night_differential_pay: The pay corresponding to the night differential hours worked.
+
+    The form performs validation to ensure that:
+    - Overtime cannot be recorded if total hours worked is less than 10.
+    - Total hours worked must be greater than zero.
+    - Deductions cannot exceed the gross salary.
     """
+    
+    class Meta:
+        model = Payroll
+        fields = [
+            'employee', 'time_in', 'daily_rate', 'time_out', 'total_hours_worked', 'overtime_pay', 
+            'overtime_hour', 'deductions', 'subtotal', 'net_salary', 'deduction_remarks', 
+            'project', 'allowance', 'night_differential_pay', 'night_differential_hour'
+        ]
+
     employee = forms.ModelChoiceField(
-        queryset=Employee.objects.all(), 
-        required=True, widget=forms.Select(attrs={'class': 'form-control'})
+        queryset=Employee.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
-    gross_salary = forms.DecimalField(
-        max_digits=10, 
+
+    daily_rate = forms.DecimalField(
+        max_digits=10,
         decimal_places=2,
         required=True,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Gross Salary'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Daily Rate'})
     )
+
+    time_in = forms.DateTimeField(
+        required=True,
+        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'})
+    )
+
+    time_out = forms.DateTimeField(
+        required=True,
+        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'})
+    )
+
+    overtime_hour = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Overtime Hour'})
+    )
+
+    night_differential_hour = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Night Differential Hour'})
+    )
+
+    night_differential_pay = forms.DecimalField(
+        required=False,
+    )
+
+    overtime_pay = forms.DecimalField(
+        required=False,
+    )
+
+    subtotal = forms.DecimalField(
+        required=False,
+    )
+
+    net_salary = forms.DecimalField(
+        required=False,
+    )
+
+    allowance = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Allowance'})
+    )
+
     deductions = forms.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
-        required=True,
+        required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Deductions'})
     )
 
-    pay_period = forms.DateField(
-        required=True,
-        widget=forms.DateInput(attrs={'class': 'form-control', 'placeholder': 'Pay Period (YYYY-MM-DD)', 'type': 'date'})
+    deduction_remarks = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Deduction Remarks', 'rows': 3})
     )
 
-    def clean_gross_salary(self):
-        """
-        Custom validation for gross salary.
-
-        Ensures that the gross salary is a positive number.
-
-        Returns:
-            decimal: The cleaned (validated) gross salary.
-
-        Raises:
-            ValidationError: If the gross salary is less than or equal to zero.
-        """
-        gross_salary = self.cleaned_data.get('gross_salary')
-        if gross_salary <= 0:
-            raise ValidationError("Gross salary must be greater than zero.")
-        return gross_salary
-
-    def clean_deductions(self):
-        """
-        Custom validation for deductions.
-
-        Ensures that the deductions are not negative and do not exceed the gross salary.
-
-        Returns:
-            decimal: The cleaned (validated) deductions.
-
-        Raises:
-            ValidationError: If the deductions are less than zero or greater than the gross salary.
-        """
-        gross_salary = self.cleaned_data.get('gross_salary')
-        deductions = self.cleaned_data.get('deductions')
-        if deductions < 0:
-            raise ValidationError("Deductions cannot be negative.")
-        if deductions > gross_salary:
-            raise ValidationError("Deductions cannot exceed the gross salary.")
-        return deductions
+    project = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Project (Optional)'})
+    )
 
     def clean(self):
         """
-        Custom validation to ensure deductions do not exceed gross salary.
-
-        This method is called after both individual field validations are done. It checks that
-        the deductions do not exceed the gross salary and adds a 'net_salary' field to the cleaned data.
-
+        Custom form validation to ensure the following:
+        - Overtime hours cannot be recorded if total hours worked is less than 10.
+        - Total hours worked must be greater than zero.
+        - Deductions cannot exceed gross salary.
+        
         Returns:
-            dict: The cleaned and validated data, including the calculated net salary.
-
-        Raises:
-            ValidationError: If deductions exceed the gross salary.
+            cleaned_data: A dictionary containing cleaned data from the form.
         """
         cleaned_data = super().clean()
-        gross_salary = cleaned_data.get('gross_salary')
+        total_hours_worked = cleaned_data.get('total_hours_worked')
         deductions = cleaned_data.get('deductions')
+    
+        overtime_hour = cleaned_data.get('overtime_hour', '')
+        night_differential_hour = cleaned_data.get('night_differential_hour', '')
+        allowance = cleaned_data.get('allowance', '')
 
-        if gross_salary and deductions:
-            if deductions > gross_salary:
-                raise ValidationError("Deductions cannot be greater than the gross salary.")
-            # Calculate the net salary and add it to the cleaned data
-            cleaned_data['net_salary'] = gross_salary - deductions
+        overtime_hour = Decimal(overtime_hour) if overtime_hour else Decimal(0)
+        night_differential_hour = Decimal(night_differential_hour) if night_differential_hour else Decimal(0)
+        deductions = Decimal(deductions) if deductions else Decimal(0)
+        allowance = Decimal(allowance) if allowance else Decimal(0)
 
+        # Check for overtime error
+        if total_hours_worked is not None and overtime_hour > 0 and total_hours_worked < 10:
+            raise ValidationError("Overtime cannot be recorded if total hours worked is less than 10.")
+
+        # Check for total hours worked error
+        if total_hours_worked is not None and total_hours_worked <= 0:
+            raise ValidationError("Total hours worked cannot be less than or equal to zero.")
+        
+        # Calculate gross salary and net salary
+        gross_salary = cleaned_data.get('subtotal')
+        net_salary = gross_salary - deductions if gross_salary is not None else 0
+
+        # Ensure deductions do not exceed gross salary
+        if gross_salary and deductions > gross_salary:
+            raise ValidationError("Deductions cannot exceed the gross salary.")
+
+        cleaned_data['net_salary'] = net_salary
+        cleaned_data['overtime_hour'] = overtime_hour
+        cleaned_data['deductions'] = deductions
+        cleaned_data['allowance'] = allowance
+        cleaned_data['night_differential_hour'] = night_differential_hour
         return cleaned_data

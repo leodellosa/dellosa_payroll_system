@@ -1,0 +1,101 @@
+{% extends "master.html" %}
+
+{% block title %}
+Payroll Summary - Payroll System
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        <h1 class="mt-4">Payroll Summary</h1>
+
+        {% if messages %}
+        <div>
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                <p>{{ message }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="GET" class="mb-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="employee" class="form-label">Select Employee</label>
+                    <select name="employee" class="form-control" id="employee" aria-label="Select an employee">
+                        <option value="">-- Select Employee --</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}" {% if employee.id == selected_employee_id %}selected{% endif %}>
+                            {{ employee.first_name }} {{ employee.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="form-text text-muted">Choose an employee to generate the payroll summary.</small>
+                </div>
+                <div class="col-md-6 mt-4">
+                    <button type="submit" class="btn btn-primary mt-2">Generate Summary</button>
+                </div>
+            </div>
+        </form>
+
+        {% if selected_employee %}
+        <h3>Payroll Summary for {{ selected_employee.first_name }} {{ selected_employee.last_name }}</h3>
+
+        <table class="table table-bordered">
+            <thead class="thead-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Total Hours Worked</th>
+                    <th>Daily Rate</th>
+                    <th>Overtime Hour</th>
+                    <th>Overtime Pay</th>
+                    <th>Night Differential Hour</th>
+                    <th>Night Differential Pay</th>
+                    <th>Allowance</th>
+                    <th>Subtotal (Gross Salary)</th>
+                    <th>Deductions</th>
+                    <th>Deduction Remarks</th>
+                    <th>Net Salary</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payroll in payrolls %}
+                <tr>
+                    <td>{{ payroll.date }}</td>
+                    <td>{{ payroll.time_in }}</td>
+                    <td>{{ payroll.time_out }}</td>
+                    <td>{{ payroll.total_hours_worked }}</td>
+                    <td>{{ payroll.daily_rate }}</td>
+                    <td>{{ payroll.overtime_hour }}</td>
+                    <td>{{ payroll.overtime_pay }}</td>
+                    <td>{{ payroll.night_differential_hour }}</td>
+                    <td>{{ payroll.night_differential_pay }}</td>
+                    <td>{{ payroll.allowance }}</td>
+                    <td>{{ payroll.subtotal }}</td>
+                    <td>{{ payroll.deductions }}</td>
+                    <td>{{ payroll.deduction_remarks }}</td>
+                    <td>{{ payroll.net_salary }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+            <h4>Total Summary</h4>
+            <p><strong>Total Hours Worked:</strong> {{ total_hours_worked }}</p>
+            <p><strong>Total Overtime Pay:</strong> {{ total_overtime_pay }}</p>
+            <p><strong>Total Night Differential Pay:</strong> {{ total_night_differential_pay }}</p>
+            <p><strong>Total Allowance:</strong> {{ allowance }}</p>
+            <p><strong>Total Deductions:</strong> {{ total_deductions }}</p>
+            <p><strong>Total Gross Salary:</strong> {{ total_gross_salary }}</p>
+            <p><strong>Total Net Salary:</strong> {{ total_net_salary }}</p>
+        </div>
+        {% else %}
+        <p>No employee selected. Please select an employee to generate the payroll summary.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
