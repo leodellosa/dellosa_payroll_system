@@ -14,8 +14,11 @@ Features
 - Payslip Generation: Generate payslips for employees.
 #### Done Development
 - Build the generate payroll feature and viewing of payroll summary
-### Current Task
+### Done Task
 - Separate payroll from employee and enhance app design
+- Build export payroll records to excel feature
+### Current Task
+- Build view payslip and export as pdf
 
 
 Prerequisites
