@@ -1,7 +1,7 @@
-{% extends "master.html" %}
+{% extends "base.html" %}
 
 {% block title %}
-Employee List - Payroll Dashboard
+Employee List
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@ Employee List - Payroll Dashboard
             <a href="{% url 'add_employee' %}" class="btn btn-primary">Add New Employee</a>
         </div>
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>First Name</th>
@@ -44,12 +44,12 @@ Employee List - Payroll Dashboard
                                         <button type="submit" class="btn btn-success btn-sm">Activate</button>
                                     {% endif %}
                                 </form>
-                            </td>                                                                                  
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>        
+        </div>
     </div>
 </div>
 <script>

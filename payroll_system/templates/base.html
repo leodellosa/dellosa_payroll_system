@@ -1,0 +1,38 @@
+{% load static bootstrap5 %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Payroll System{% endblock %}</title>
+    <link href="{% static 'css/global.css' %}" rel="stylesheet">
+    {% bootstrap_css %}
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+    <div class="wrapper">
+        {% include 'sidebar.html' %}
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    {% bootstrap_javascript %}
+
+    <!-- Sidebar Toggle Script (placed just before closing body tag) -->
+    <script>
+        // Toggle the sidebar when the button is clicked
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Attach event listener to the sidebar toggler button
+        document.querySelector('.sidebar-toggler').addEventListener('click', toggleSidebar);
+    </script>
+
+</body>
+
+</html>

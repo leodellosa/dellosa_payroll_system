@@ -1,134 +1,17 @@
 from django.shortcuts import get_object_or_404, redirect, render
-from .forms import EmployeeForm, PayrollForm
-from .models import Employee, Payroll
+from .forms import PayrollForm
+from .models import Payroll
 from django.contrib import messages
 from django.utils.dateparse import parse_datetime
+from employee.models import Employee
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+# from weasyprint import HTML
+from openpyxl import Workbook
+from django.db.models import Sum
 
-def employeeList(request):
-    """
-    View to display a list of all employees.
-
-    Retrieves all employee records from the database and passes them
-    to the 'employee_list.html' template for rendering.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HttpResponse: Renders the employee_list.html template with all employees.
-    """
-    employees = Employee.objects.all()
-    return render(request, 'employee_list.html', {'employees': employees})
 
 def dashboard(request):
-    return redirect('employee_list')
-
-def addEmployee(request):
-    """
-    View to handle the addition of a new employee.
-
-    Displays a form to create a new employee and saves the employee's data
-    to the database if the form is valid. On successful creation, redirects
-    to the employee list page.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        HttpResponse: Renders the 'add_employee.html' template with the form,
-        or redirects to the employee list if the form is valid.
-    """
-    if request.method == 'POST':
-        # print(request.POST)
-        form = EmployeeForm(request.POST)
-        
-        if form.is_valid():
-            form.save()
-            return redirect('employee_list')
-        else:
-            # print(form.errors)
-            return render(request, 'add_employee.html', {'form': form})
-    else:
-        form = EmployeeForm()
-        return render(request, 'add_employee.html', {'form': form})
-
-def employeeDetails(request, employee_id):
-    """
-    View to display details of a specific employee.
-
-    Retrieves a specific employee based on the given employee_id and renders
-    the 'employee_detail.html' template with the employee's information.
-
-    Args:
-        request: The HTTP request object.
-        employee_id: The ID of the employee to be displayed.
-
-    Returns:
-        HttpResponse: Renders the 'employee_detail.html' template with the
-        employee details.
-    """
-    employee = get_object_or_404(Employee, id=employee_id)
-    return render(request, 'employee_detail.html', {'employee': employee})
-
-def editEmployee(request, employee_id):
-    """
-    View to edit an existing employee's details.
-
-    Retrieves the employee based on the given employee_id and displays a
-    form pre-filled with the employee's current details. On successful form
-    submission, updates the employee's details in the database.
-
-    Args:
-        request: The HTTP request object.
-        employee_id: The ID of the employee to be edited.
-
-    Returns:
-        HttpResponse: Renders the 'edit_employee.html' template with the form
-        for editing the employee details, or redirects to the employee details
-        page if the form is valid.
-    """
-    employee = get_object_or_404(Employee, id=employee_id)
-
-    # Capture the referrer URL
-    referer = request.META.get('HTTP_REFERER', '/')
-
-    if request.method == 'POST':
-        form = EmployeeForm(request.POST, instance=employee)
-        if form.is_valid():
-            form.save()
-            return redirect('employee_details', employee_id=employee.id)
-    else:
-        form = EmployeeForm(instance=employee)
-
-    return render(request, 'edit_employee.html', {
-        'form': form,
-        'employee': employee,
-        'referer': referer
-    })
-
-def updateEmployeeStatus(request, employee_id):
-    """
-    View to update the employment status of a specific employee.
-
-    Retrieves the employee based on the given employee_id and toggles their
-    status between 'Active' and 'Inactive'. The updated status is saved in the database.
-
-    Args:
-        request: The HTTP request object.
-        employee_id: The ID of the employee whose status needs to be updated.
-
-    Returns:
-        HttpResponse: Redirects to the employee list after the status update.
-    """
-    employee = get_object_or_404(Employee, id=employee_id)
-    
-    if employee.status == 'Active':
-        employee.status = 'Inactive'
-    else:
-        employee.status = 'Active'
-    
-    employee.save()
-
     return redirect('employee_list')
 
 def generatePayroll(request):
@@ -210,11 +93,6 @@ def generatePayroll(request):
         form = PayrollForm()
         return render(request, 'generate_payroll.html', {'form': form})
 
-
-
-from django.shortcuts import render, get_object_or_404
-from .models import Employee, Payroll
-
 def payrollSummary(request):
     """
     View to display the payroll summary for all employees or a specific employee.
@@ -245,6 +123,7 @@ def payrollSummary(request):
         total_gross_salary = sum(payroll.subtotal for payroll in payrolls)
         total_net_salary = sum(payroll.net_salary for payroll in payrolls)
 
+        # Pass the data to the template
         return render(request, 'payroll_summary.html', {
             'payrolls': payrolls,
             'employees': employees,
@@ -257,3 +136,103 @@ def payrollSummary(request):
             'total_gross_salary': total_gross_salary,
             'total_net_salary': total_net_salary
         })
+
+
+# def generatePayslip(request, payroll_id):
+#     payroll = Payroll.objects.get(id=payroll_id)
+#     html_string = render_to_string('payroll_payslip.html', {'payroll': payroll})
+#     pdf = HTML(string=html_string).write_pdf()
+
+#     # Add success message to Django messages framework
+#     messages.success(request, 'Payroll summary has been successfully generated.')
+
+#     response = HttpResponse(pdf, content_type='application/pdf')
+#     response['Content-Disposition'] = f'attachment; filename="payslip_{payroll.employee.first_name}_{payroll.employee.last_name}_{payroll.date}.pdf"'
+#     return response
+
+
+def generatePayslipExcel(request, employee_id):
+    """
+    Generate and return an Excel payslip for a specific employee.
+
+    This view fetches payroll records for the given employee and generates 
+    an Excel file containing a summary of the employee's payroll information.
+    The Excel file includes details such as the date, daily rate, allowance, 
+    overtime pay, night differential pay, deductions, subtotal (gross salary), 
+    and net salary. The file is then returned as a downloadable response.
+
+    Parameters:
+    request (HttpRequest): The HTTP request object containing user data and session information.
+    employee_id (int): The ID of the employee for whom the payslip is being generated.
+
+    Returns:
+    HttpResponse: An HTTP response containing the generated Excel file as an attachment.
+
+    Raises:
+    Http404: If the employee with the given employee_id does not exist.
+    
+    Example:
+    To generate a payslip for an employee with ID 1:
+    GET /payroll/generate_payslip_excel/1/
+
+    The resulting file will be an Excel document containing payroll details 
+    for the specified employee.
+    """
+    employee = get_object_or_404(Employee, id=employee_id)
+    payrolls = Payroll.objects.filter(employee=employee).select_related('employee').iterator(chunk_size=100)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Payslip"
+
+    headers = [
+        "Date","Time In","Time Out","Total Hours Worked", "Daily Rate","Overtime Hour", "Overtime Pay", 
+        "Night Differential Hour","Night Differential Pay","Allowance", "Deductions","Deduction Remarks", "Subtotal", "Net Salary"
+    ]
+    ws.append(headers)
+
+    batch = []
+
+    for payroll in payrolls:
+        data = [
+            payroll.date.strftime("%Y-%m-%d"),
+            payroll.time_in.strftime("%H:%M:%S"),
+            payroll.time_out.strftime("%H:%M:%S"),
+            payroll.total_hours_worked,
+            payroll.daily_rate,
+            payroll.overtime_hour,
+            payroll.overtime_pay,
+            payroll.night_differential_hour,
+            payroll.night_differential_pay,
+            payroll.allowance,
+            payroll.deductions,
+            payroll.deduction_remarks,
+            payroll.subtotal,
+            payroll.net_salary
+        ]
+        batch.append(data)
+
+        # If the batch reaches a size, insert it into the worksheet
+        if len(batch) >= 100:
+            for row in batch:
+                ws.append(row)
+            batch.clear()  # Clear the batch
+
+    # Add any remaining rows in the batch
+    if batch:
+        for row in batch:
+            ws.append(row)
+
+    messages.success(request, 'Payroll summary has been successfully generated.')
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="payslip_{employee.first_name}_{employee.last_name}.xlsx"'
+
+    wb.save(response)
+
+    return redirect('payroll_summary')
+
+
+

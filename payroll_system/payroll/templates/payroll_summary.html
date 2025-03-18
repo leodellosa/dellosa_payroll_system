@@ -1,4 +1,4 @@
-{% extends "master.html" %}
+{% extends "base.html" %}
 
 {% block title %}
 Payroll Summary - Payroll System
@@ -82,6 +82,13 @@ Payroll Summary - Payroll System
                 {% endfor %}
             </tbody>
         </table>
+        {% if payrolls %}
+        <div class="mt-4">
+            <a href="{% url 'generate_payslip_excel' selected_employee.id %}" class="btn btn-success">Generate Payslip for All</a>
+        </div>
+        {% else %}
+        <span>No payroll data available</span>
+        {% endif %}
 
         <div class="mt-4">
             <h4>Total Summary</h4>
