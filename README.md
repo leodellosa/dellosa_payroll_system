@@ -6,19 +6,24 @@ With this application, you can:
 - Add, view, and manage employees.
 - Generate payslips for employees.
 - View employee details, payroll, and statuses.
+- Export payslip as pdf or excel file
 
 Features
 #### Done Development
 - Employee Management: Add, view, and manage employee details.
-#### Current Development
-- Payslip Generation: Generate payslips for employees.
-#### Done Development
 - Build the generate payroll feature and viewing of payroll summary
+- Payslip export to pdf or excel
+
 ### Done Task
 - Separate payroll from employee and enhance app design
 - Build export payroll records to excel feature
-### Current Task
 - Build view payslip and export as pdf
+
+### Nice to have feature
+- Batch upload of payrolls
+- Settings
+- Login Log out
+
 
 
 Prerequisites
