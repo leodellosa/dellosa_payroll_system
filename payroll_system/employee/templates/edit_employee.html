@@ -7,6 +7,7 @@ Edit Employee
 {% block content %}
 <div class="main-content">
     <div class="container">
+        {% include 'form_message.html' %}
         <h1 class="mt-4">Edit Employee</h1>
         <form method="POST" action="{% url 'edit_employee' employee.id %}"  onsubmit="return confirmUpdate();">
             {% csrf_token %}

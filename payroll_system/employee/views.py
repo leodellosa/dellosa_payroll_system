@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from .forms import EmployeeForm
 from .models import Employee
+from django.contrib import messages
 
 def employeeList(request):
     """
@@ -39,9 +40,14 @@ def addEmployee(request):
         
         if form.is_valid():
             form.save()
-            return redirect('employee_list')
+            messages.success(request, f"Employee added successfully!")
+            # print("Success message set!") 
+            return redirect('add_employee')
         else:
             # print(form.errors)
+            for field in form:
+                for error in field.errors:
+                    messages.error(request, f"Error in {field.label}: {error}")
             return render(request, 'add_employee.html', {'form': form})
     else:
         form = EmployeeForm()
@@ -91,7 +97,17 @@ def editEmployee(request, employee_id):
         form = EmployeeForm(request.POST, instance=employee)
         if form.is_valid():
             form.save()
+            messages.success(request, f"Employee updated successfully!")
             return redirect('employee_details', employee_id=employee.id)
+        else:
+            # print(form.errors)
+            for field in form:
+                for error in field.errors:
+                    messages.error(request, f"Error in {field.label}: {error}")
+            return render(request, 'edit_employee.html', {
+                'form': form,
+                'employee': employee
+            })         
     else:
         form = EmployeeForm(instance=employee)
 

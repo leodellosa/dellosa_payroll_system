@@ -17,4 +17,8 @@ urlpatterns = [
     # Rounte to generate a payslip for an employee.
     # This will render the generatePaslipExcel view to generate and download a payslip in Excel format.
     path('generate_payslip_excel/<int:employee_id>/', views.generatePayslipExcel, name='generate_payslip_excel'),
+
+    # Route to export a payslip for an employee in PDF format.
+    # This will render the exportPayslipPdf view to generate and download a payslip in PDF format.
+    path('export-payslip-pdf/<int:employee_id>/', views.exportPayslipPdf, name='export_payslip_pdf'),
 ]

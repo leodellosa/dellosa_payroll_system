@@ -7,20 +7,24 @@ Add Employee
 {% block content %}
 <div class="main-content">
     <div class="container">
+        {% if field.errors %}
+            <div class="text-danger">
+                {% for error in field.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% include 'form_message.html' %}
         <h1 class="mt-4">Add New Employee</h1>
-        <form method="POST" action="{% url 'add_employee' %}">
+        <form method="POST" action="{% url 'add_employee' %}" onsubmit="return confirmAddEmployee();">
             {% csrf_token %}
-            
             <div class="row">
-                <!-- First Name -->
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="first_name" class="form-label">First Name</label>
                         <input type="text" class="form-control" id="first_name" name="first_name" required>
                     </div>
                 </div>
-                
-                <!-- Last Name -->
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="last_name" class="form-label">Last Name</label>
@@ -30,15 +34,12 @@ Add Employee
             </div>
 
             <div class="row">
-                <!-- Email Address -->
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="email" name="email" required>
                     </div>
                 </div>
-
-                <!-- Hire Date -->
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="hire_date" class="form-label">Hire Date</label>
@@ -48,7 +49,6 @@ Add Employee
             </div>
 
             <div class="row">
-                <!-- Position -->
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="position" class="form-label">Position</label>
@@ -58,9 +58,16 @@ Add Employee
             </div>
 
             <div class="text-center">
+                <a href="{% url 'employee_list' %}" class="btn btn-secondary">Back to Employee List</a>
                 <button type="submit" class="btn btn-primary">Add Employee</button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    function confirmAddEmployee() {
+        return confirm("Are you sure you want to add this employee?");
+    }
+</script>
 {% endblock %}

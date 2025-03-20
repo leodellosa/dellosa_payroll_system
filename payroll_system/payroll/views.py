@@ -6,10 +6,13 @@ from django.utils.dateparse import parse_datetime
 from employee.models import Employee
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-# from weasyprint import HTML
+from weasyprint import HTML
 from openpyxl import Workbook
-from django.db.models import Sum
-
+from django.contrib.staticfiles import finders
+from django.db.models import Min, Max
+from django.utils import timezone
+from openpyxl.drawing.image import Image
+from openpyxl.styles import Alignment, Font
 
 def dashboard(request):
     return redirect('employee_list')
@@ -75,9 +78,8 @@ def generatePayroll(request):
 
             # Notify the user that the payroll was successfully generated
             messages.success(request, f"Payroll for {employee} has been successfully generated!")
-
-            # Redirect to another page, such as a summary of generated payroll
-            return redirect('payroll_summary')  # You can replace with the correct URL name or path
+            form = PayrollForm()
+            return render(request,'generate_payroll.html', {'form': form})  # You can replace with the correct URL name or path
 
         else:
             # If the form is not valid, display errors
@@ -102,12 +104,9 @@ def payrollSummary(request):
     gross salary, deductions, and net salary.
     """
     employees = Employee.objects.all()
-
-    # Default to show payroll summary for all employees
     selected_employee = None
     payrolls = Payroll.objects.all()
 
-    # Check if the form was submitted with a GET request
     if request.method == 'GET':
         selected_employee_id = request.GET.get('employee')
         if selected_employee_id:
@@ -123,7 +122,6 @@ def payrollSummary(request):
         total_gross_salary = sum(payroll.subtotal for payroll in payrolls)
         total_net_salary = sum(payroll.net_salary for payroll in payrolls)
 
-        # Pass the data to the template
         return render(request, 'payroll_summary.html', {
             'payrolls': payrolls,
             'employees': employees,
@@ -137,93 +135,157 @@ def payrollSummary(request):
             'total_net_salary': total_net_salary
         })
 
+def exportPayslipPdf(request, employee_id):
+    """
+    Generate and return a PDF payslip for a specific employee, including the company logo,
+    name, position, pay period, date generated, daily rate, and summary.
+    """
+    employee = get_object_or_404(Employee, id=employee_id)
+    payrolls = Payroll.objects.filter(employee=employee)
 
-# def generatePayslip(request, payroll_id):
-#     payroll = Payroll.objects.get(id=payroll_id)
-#     html_string = render_to_string('payroll_payslip.html', {'payroll': payroll})
-#     pdf = HTML(string=html_string).write_pdf()
+    if not payrolls:
+        return HttpResponse("No payroll records found for this employee.", status=404)
 
-#     # Add success message to Django messages framework
-#     messages.success(request, 'Payroll summary has been successfully generated.')
+    total_hours_worked = sum(payroll.total_hours_worked for payroll in payrolls)
+    total_overtime_pay = sum(payroll.overtime_pay for payroll in payrolls)
+    total_night_differential_pay = sum(payroll.night_differential_pay for payroll in payrolls)
+    allowance = sum(payroll.allowance for payroll in payrolls)
+    total_deductions = sum(payroll.deductions for payroll in payrolls)
+    total_gross_salary = sum(payroll.subtotal for payroll in payrolls)
+    total_net_salary = sum(payroll.net_salary for payroll in payrolls)
+    pay_period_from = payrolls.aggregate(Min('date'))['date__min']
+    pay_period_to = payrolls.aggregate(Max('date'))['date__max']
+    current_date = timezone.now()
+    daily_rate = payrolls.first().daily_rate
 
-#     response = HttpResponse(pdf, content_type='application/pdf')
-#     response['Content-Disposition'] = f'attachment; filename="payslip_{payroll.employee.first_name}_{payroll.employee.last_name}_{payroll.date}.pdf"'
-#     return response
+    html_string = render_to_string('payroll_payslip.html', {
+        'selected_employee': employee,
+        'payrolls': payrolls,
+        'total_hours_worked': total_hours_worked,
+        'total_overtime_pay': total_overtime_pay,
+        'total_night_differential_pay': total_night_differential_pay,
+        'allowance': allowance,
+        'total_deductions': total_deductions,
+        'total_gross_salary': total_gross_salary,
+        'total_net_salary': total_net_salary,
+        'pay_period_from': pay_period_from,
+        'pay_period_to': pay_period_to,
+        'current_date': current_date,
+        'daily_rate': daily_rate
+    })
+
+    css_path = finders.find('css/payslip.css')
+
+    if not css_path:
+        return HttpResponse("CSS file not found.", status=404)
+
+    # Pass the CSS path to WeasyPrint
+    pdf_file = HTML(string=html_string,base_url=request.build_absolute_uri()).write_pdf(stylesheets=[css_path])
+
+    # Return the PDF as a response
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="payslip_{employee.first_name}_{employee.last_name}.pdf"'
+    return response
 
 
 def generatePayslipExcel(request, employee_id):
     """
-    Generate and return an Excel payslip for a specific employee.
-
-    This view fetches payroll records for the given employee and generates 
-    an Excel file containing a summary of the employee's payroll information.
-    The Excel file includes details such as the date, daily rate, allowance, 
-    overtime pay, night differential pay, deductions, subtotal (gross salary), 
-    and net salary. The file is then returned as a downloadable response.
-
-    Parameters:
-    request (HttpRequest): The HTTP request object containing user data and session information.
-    employee_id (int): The ID of the employee for whom the payslip is being generated.
-
-    Returns:
-    HttpResponse: An HTTP response containing the generated Excel file as an attachment.
-
-    Raises:
-    Http404: If the employee with the given employee_id does not exist.
-    
-    Example:
-    To generate a payslip for an employee with ID 1:
-    GET /payroll/generate_payslip_excel/1/
-
-    The resulting file will be an Excel document containing payroll details 
-    for the specified employee.
+    Generate and return an Excel payslip for a specific employee, including the company logo, 
+    name, position, pay period, date generated, daily rate, and summary.
     """
     employee = get_object_or_404(Employee, id=employee_id)
-    payrolls = Payroll.objects.filter(employee=employee).select_related('employee').iterator(chunk_size=100)
+    payrolls = Payroll.objects.filter(employee=employee).select_related('employee')
+
+    if not payrolls:
+        return HttpResponse("No payroll records found for this employee.", status=404)
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Payslip"
 
+    logo_path = finders.find('img/company_logo.png')
+    if logo_path:
+        img = Image(logo_path)
+        img.width = 120
+        img.height = 80
+        ws.add_image(img, 'A1')
+    
+    ws.merge_cells('C1:G1')
+    ws['C1'] = "HODREAL FIT-OUT AND CONSTRUCTION"
+    ws['C1'].alignment = Alignment(horizontal='left', vertical='center')
+    ws['C1'].font = Font(bold=True, size=14)
+    
+    ws.merge_cells('C2:J2')
+    ws['C2'] = "Bantangas City | Contact: 09217292222 | Email: hodrealconstruction@yahoo.com"
+    ws['C2'].alignment = Alignment(horizontal='left', vertical='center')
+    ws['C2'].font = Font(size=10)
+
+    row_offset = 5 
+
+    ws.merge_cells(f'A{row_offset}:F{row_offset}')
+    ws[f'A{row_offset}'] = f"Employee: {employee.first_name} {employee.last_name}"
+    ws[f'A{row_offset}'].font = Font(bold=True)
+    ws[f'A{row_offset}'].alignment = Alignment(horizontal='left')
+
+    ws.merge_cells(f'A{row_offset + 1}:F{row_offset + 1}')
+    ws[f'A{row_offset + 1}'] = f"Position: {employee.position}"
+    ws[f'A{row_offset + 1}'].font = Font(bold=True)
+    ws[f'A{row_offset + 1}'].alignment = Alignment(horizontal='left')
+
+    pay_period_from = payrolls.aggregate(Min('date'))['date__min']
+    pay_period_to = payrolls.aggregate(Max('date'))['date__max']
+
+    ws.merge_cells(f'A{row_offset + 2}:F{row_offset + 2}')
+    ws[f'A{row_offset + 2}'] = f"Pay Period: {pay_period_from.strftime('%Y-%m-%d')} - {pay_period_to.strftime('%Y-%m-%d')}"
+    ws[f'A{row_offset + 2}'].font = Font(bold=True)
+    ws[f'A{row_offset + 2}'].alignment = Alignment(horizontal='left')
+
+    ws.merge_cells(f'A{row_offset + 3}:F{row_offset + 3}')
+    ws[f'A{row_offset + 3}'] = f"Date Generated: {timezone.now().strftime('%Y-%m-%d')}"
+    ws[f'A{row_offset + 3}'].font = Font(bold=True)
+    ws[f'A{row_offset + 3}'].alignment = Alignment(horizontal='left')
+
+    daily_rate = payrolls.first().daily_rate
+    ws.merge_cells(f'A{row_offset + 4}:F{row_offset + 4}')
+    ws[f'A{row_offset + 4}'] = f"Daily Rate: {daily_rate}"
+    ws[f'A{row_offset + 4}'].font = Font(bold=True)
+    ws[f'A{row_offset + 4}'].alignment = Alignment(horizontal='left')
+
+    row_offset += 7
+
     headers = [
-        "Date","Time In","Time Out","Total Hours Worked", "Daily Rate","Overtime Hour", "Overtime Pay", 
-        "Night Differential Hour","Night Differential Pay","Allowance", "Deductions","Deduction Remarks", "Subtotal", "Net Salary"
+        "Date", "Overtime", "Night Differential", "Allowance", "Deductions", "Total Amount"
     ]
-    ws.append(headers)
-
-    batch = []
-
+    for col_num, header in enumerate(headers, 1):
+        ws.cell(row=row_offset, column=col_num, value=header)
+    
     for payroll in payrolls:
-        data = [
+        ws.append([
             payroll.date.strftime("%Y-%m-%d"),
-            payroll.time_in.strftime("%H:%M:%S"),
-            payroll.time_out.strftime("%H:%M:%S"),
-            payroll.total_hours_worked,
-            payroll.daily_rate,
-            payroll.overtime_hour,
             payroll.overtime_pay,
-            payroll.night_differential_hour,
             payroll.night_differential_pay,
             payroll.allowance,
             payroll.deductions,
-            payroll.deduction_remarks,
-            payroll.subtotal,
             payroll.net_salary
-        ]
-        batch.append(data)
+        ])
 
-        # If the batch reaches a size, insert it into the worksheet
-        if len(batch) >= 100:
-            for row in batch:
-                ws.append(row)
-            batch.clear()  # Clear the batch
+    total_hours_worked = sum(payroll.total_hours_worked for payroll in payrolls)
+    total_overtime_pay = sum(payroll.overtime_pay for payroll in payrolls)
+    total_night_differential_pay = sum(payroll.night_differential_pay for payroll in payrolls)
+    total_allowance = sum(payroll.allowance for payroll in payrolls)
+    total_deductions = sum(payroll.deductions for payroll in payrolls)
+    total_gross_salary = sum(payroll.subtotal for payroll in payrolls)
+    total_net_salary = sum(payroll.net_salary for payroll in payrolls)
 
-    # Add any remaining rows in the batch
-    if batch:
-        for row in batch:
-            ws.append(row)
+    row_offset += len(payrolls) + 3 
 
-    messages.success(request, 'Payroll summary has been successfully generated.')
+    ws[f'A{row_offset}'] = f"Total Hours Worked: {total_hours_worked}"
+    ws[f'A{row_offset + 1}'] = f"Total Overtime Pay: {total_overtime_pay}"
+    ws[f'A{row_offset + 2}'] = f"Total Night Differential Pay: {total_night_differential_pay}"
+    ws[f'A{row_offset + 3}'] = f"Total Allowance: {total_allowance}"
+    ws[f'A{row_offset + 4}'] = f"Total Deductions: {total_deductions}"
+    ws[f'A{row_offset + 5}'] = f"Total Gross Salary: {total_gross_salary}"
+    ws[f'A{row_offset + 6}'] = f"Total Net Salary: {total_net_salary}"
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -231,8 +293,4 @@ def generatePayslipExcel(request, employee_id):
     response['Content-Disposition'] = f'attachment; filename="payslip_{employee.first_name}_{employee.last_name}.xlsx"'
 
     wb.save(response)
-
-    return redirect('payroll_summary')
-
-
-
+    return response

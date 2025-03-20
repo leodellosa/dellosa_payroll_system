@@ -7,7 +7,20 @@ Payroll Summary - Payroll System
 {% block content %}
 <div class="main-content">
     <div class="container">
-        <h1 class="mt-4">Payroll Summary</h1>
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="mt-4">Payroll Summary</h1>
+            <div class="export-buttons">
+                {% if selected_employee and payrolls %}
+                    <a href="{% url 'generate_payslip_excel' selected_employee.id %}" 
+                       class="btn btn-success">Download Payslip as Excel</a>
+                    <a href="{% url 'export_payslip_pdf' selected_employee.id %}" 
+                       class="btn btn-primary">Download Payslip as PDF</a>
+                {% else %}
+                    <button class="btn btn-success" disabled>Download Payslip as Excel</button>
+                    <button class="btn btn-primary" disabled>Download Payslip as PDF</button>
+                {% endif %}
+            </div>
+        </div>
 
         {% if messages %}
         <div>
@@ -84,13 +97,6 @@ Payroll Summary - Payroll System
         </table>
         {% if payrolls %}
         <div class="mt-4">
-            <a href="{% url 'generate_payslip_excel' selected_employee.id %}" class="btn btn-success">Generate Payslip for All</a>
-        </div>
-        {% else %}
-        <span>No payroll data available</span>
-        {% endif %}
-
-        <div class="mt-4">
             <h4>Total Summary</h4>
             <p><strong>Total Hours Worked:</strong> {{ total_hours_worked }}</p>
             <p><strong>Total Overtime Pay:</strong> {{ total_overtime_pay }}</p>
@@ -100,6 +106,9 @@ Payroll Summary - Payroll System
             <p><strong>Total Gross Salary:</strong> {{ total_gross_salary }}</p>
             <p><strong>Total Net Salary:</strong> {{ total_net_salary }}</p>
         </div>
+        {% else %}
+        <p>No payroll records found for the selected employee.</p>
+        {% endif %}
         {% else %}
         <p>No employee selected. Please select an employee to generate the payroll summary.</p>
         {% endif %}

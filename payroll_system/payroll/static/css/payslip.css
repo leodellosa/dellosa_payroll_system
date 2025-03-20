@@ -1,0 +1,89 @@
+.payslip-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.payslip-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.payslip-header img {
+    max-height: 80px;
+    margin-bottom: 10px;
+}
+
+.payslip-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.payslip-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.payslip-table th,
+.payslip-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.payslip-table th {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.payslip-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.payslip-table tbody tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+.payslip-footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: #888;
+}
+
+.payslip-table tr {
+    page-break-inside: avoid;
+}
+
+.payslip-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.page-break {
+    page-break-before: always;
+}
+
+@media print {
+    .page-break {
+        page-break-before: always;
+    }
+}
+
+.export-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+
