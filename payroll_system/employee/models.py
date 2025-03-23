@@ -37,7 +37,7 @@ class Employee(models.Model):
         Returns a string representation of the Employee object, displaying the employee's full name.
 
         Example:
-            "John Doe"
+            "Leo Dellosa"
         """
         return f"{self.first_name} {self.last_name}"
 

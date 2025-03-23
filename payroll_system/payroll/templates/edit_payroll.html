@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Payroll
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        {% include 'form_message.html' %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            <ul>
+                {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <h2 class="mt-4">Edit Payroll</h2>
+        <form method="POST" id="payroll-form">
+            {% csrf_token %}
+            
+            <div class="row mb-3">
+                <div class="col-md-6 form-group">
+                    <label for="employee" class="form-label">Employee</label>
+                    {{ form.employee }}
+                    {% include 'form_errors.html' with form=form.employee %}
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="daily_rate" class="form-label">Daily Rate</label>
+                    {{ form.daily_rate }}
+                    {% include 'form_errors.html' with form=form.daily_rate %}
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="project" class="form-label">Project</label>
+                    {{ form.project }}
+                    {% include 'form_errors.html' with form=form.project %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4 form-group">
+                    <label for="time_in" class="form-label">Time In</label>
+                    {{ form.time_in }}
+                    {% include 'form_errors.html' with form=form.time_in %}
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="time_out" class="form-label">Time Out</label>
+                    {{ form.time_out }}
+                    {% include 'form_errors.html' with form=form.time_out %}
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="total_hours_worked" class="form-label">Total Hours Worked</label>
+                    <input type="number" class="form-control" id="total_hours_worked" name="total_hours_worked" value="{{ form.total_hours_worked.value|default:form.total_hours_worked.initial }}" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 form-group">
+                    <label for="overtime_hour" class="form-label">Overtime Hour</label>
+                    {{ form.overtime_hour }}
+                    {% include 'form_errors.html' with form=form.overtime_hour %}
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="overtime_pay" class="form-label">Overtime Pay</label>
+                    <input type="number" class="form-control" id="overtime_pay" name="overtime_pay" value="{{ form.overtime_pay.value|default:form.overtime_pay.initial }}" readonly>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="night_differential_hour" class="form-label">Night Differential Hour</label>
+                    {{ form.night_differential_hour }}
+                    {% include 'form_errors.html' with form=form.night_differential_hour %}
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="night_differential_pay" class="form-label">Night Differential Pay</label>
+                    <input type="number" class="form-control" id="night_differential_pay" name="night_differential_pay" value="{{ form.night_differential_pay.value|default:form.night_differential_pay.initial }}" readonly>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-3 form-group">
+                    <label for="allowance" class="form-label">Allowance</label>
+                    {{ form.allowance }}
+                    {% include 'form_errors.html' with form=form.allowance %}
+                </div>
+                <div class="col-md-3 form-group">
+                    <label for="deductions" class="form-label">Deductions</label>
+                    {{ form.deductions }}
+                    {% include 'form_errors.html' with form=form.deductions %}
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="deduction_remarks" class="form-label">Deduction Remarks</label>
+                    {{ form.deduction_remarks }}
+                    {% include 'form_errors.html' with form=form.deduction_remarks %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4 d-flex align-items-center form-group">
+                    <label for="subtotal" class="form-label me-2">Subtotal</label>
+                    <input type="number" class="form-control" id="subtotal" name="subtotal" value="{{ form.subtotal.value|default:form.subtotal.initial }}" readonly>
+                </div>
+                <div class="col-md-4 d-flex align-items-center form-group">
+                    <label for="net_salary" class="form-label me-2">Net Salary</label>
+                    <input type="number" class="form-control" id="net_salary" name="net_salary" value="{{ form.net_salary.value|default:form.net_salary.initial }}" readonly>
+                </div>
+                
+            </div>
+            <div class="row mb-3">
+                <div class="text-center">
+                    <a href="{% url 'payroll_summary' %}" class="btn btn-secondary">Back to Payroll summary</a>
+                    <button type="submit" class="btn btn-primary">Update Payroll</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% load static %}
+<script src="{% static 'js/payroll.js' %}"></script>
+
+{% endblock %}

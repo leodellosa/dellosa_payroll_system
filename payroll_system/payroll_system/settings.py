@@ -110,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -134,6 +134,6 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Media URL and Root settings
-MEDIA_URL = '/media/' 
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_URL = '/media/' 
+# MEDIA_ROOT = BASE_DIR / 'media'
 

@@ -116,6 +116,20 @@ class PayrollForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Project (Optional)'})
     )
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize the form with specific payroll data.
+        """
+        payroll = kwargs.get('instance')
+        super().__init__(*args, **kwargs)
+
+        if payroll:
+            self.fields['total_hours_worked'].initial = payroll.total_hours_worked
+            self.fields['overtime_pay'].initial = payroll.overtime_pay
+            self.fields['night_differential_pay'].initial = payroll.night_differential_pay
+            self.fields['subtotal'].initial = payroll.subtotal
+            self.fields['net_salary'].initial = payroll.net_salary
+
     def clean(self):
         """
         Custom form validation to ensure the following:
@@ -139,10 +153,14 @@ class PayrollForm(forms.ModelForm):
         deductions = Decimal(deductions) if deductions else Decimal(0)
         allowance = Decimal(allowance) if allowance else Decimal(0)
 
-        # Check for overtime error
-        if total_hours_worked is not None and overtime_hour > 0 and total_hours_worked < 10:
-            raise ValidationError("Overtime cannot be recorded if total hours worked is less than 10.")
-
+        # Check for overtime hours error
+        if total_hours_worked is not None:
+            if overtime_hour > 0 and total_hours_worked <= 10:
+                raise ValidationError("Overtime cannot be recorded if total hours worked is less than 10.")
+            
+            if overtime_hour > 0 and (total_hours_worked - overtime_hour) < 10:
+                raise ValidationError("Overtime hours cannot exceed total hours worked")
+        
         # Check for total hours worked error
         if total_hours_worked is not None and total_hours_worked <= 0:
             raise ValidationError("Total hours worked cannot be less than or equal to zero.")
@@ -161,3 +179,7 @@ class PayrollForm(forms.ModelForm):
         cleaned_data['allowance'] = allowance
         cleaned_data['night_differential_hour'] = night_differential_hour
         return cleaned_data
+
+
+class PayrollUploadForm(forms.Form):
+    excel_file = forms.FileField()

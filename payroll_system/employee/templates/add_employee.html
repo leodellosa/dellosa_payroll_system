@@ -7,13 +7,6 @@ Add Employee
 {% block content %}
 <div class="main-content">
     <div class="container">
-        {% if field.errors %}
-            <div class="text-danger">
-                {% for error in field.errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
         {% include 'form_message.html' %}
         <h1 class="mt-4">Add New Employee</h1>
         <form method="POST" action="{% url 'add_employee' %}" onsubmit="return confirmAddEmployee();">

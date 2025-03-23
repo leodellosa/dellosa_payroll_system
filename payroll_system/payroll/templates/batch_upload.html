@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Batch Upload Payroll - Payroll System
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container">
+        {% include 'form_message.html' %}
+        <h2 class="mt-4">Batch Upload Payroll</h2>
+        <form method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.as_p }}
+            </div>
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        
+        <div class="mt-4">
+            <a href="{% url 'payroll_download_template' %}" class="btn btn-secondary">
+                Download Excel Template
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

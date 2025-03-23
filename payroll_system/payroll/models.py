@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from employee.models import Employee
+from django.db.models import UniqueConstraint
 
 class Payroll(models.Model):
     """
@@ -47,6 +48,10 @@ class Payroll(models.Model):
     project = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['employee', 'date'], name='unique_employee_date')
+        ]
     def __str__(self):
         """
         Returns a string representation of the Payroll object, showing the employee and the date of the payroll.
