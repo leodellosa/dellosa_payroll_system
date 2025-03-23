@@ -18,11 +18,11 @@ Features
 - Separate payroll from employee and enhance app design
 - Build export payroll records to excel feature
 - Build view payslip and export as pdf
+- Batch upload of payrolls
 
 ### Nice to have feature
-- Batch upload of payrolls
 - Settings
-- Login Log out
+- Log in Log out
 
 
 
