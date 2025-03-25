@@ -7,23 +7,28 @@ With this application, you can:
 - Generate payslips for employees.
 - View employee details, payroll, and statuses.
 - Export payslip as pdf or excel file
+- Upload payroll details by batch using excel file with downloadable template
 
 Features
-#### Done Development
+### Done Development
 - Employee Management: Add, view, and manage employee details.
 - Build the generate payroll feature and viewing of payroll summary
 - Payslip export to pdf or excel
+- Batch upload of payroll via excel file
 
-### Done Task
+#### Done Task
 - Separate payroll from employee and enhance app design
-- Build export payroll records to excel feature
-- Build view payslip and export as pdf
-- Batch upload of payrolls
+- Build export payroll records to excel or pdf feature
+- Add date filter in payroll summary view
+- Add download template button for batch upload
+- Add Batch upload of payrolls via excel
 
-### Nice to have feature
+#### Nice to have feature
 - Settings
 - Log in Log out
 
+#### Note:
+Currently, the app supports only admin users. Future updates may include role-based access control.
 
 
 Prerequisites
