@@ -11,9 +11,37 @@ Employee List
             <h1 class="mt-4">Employee List</h1>
             <a href="{% url 'add_employee' %}" class="btn btn-primary">Add New Employee</a>
         </div>
+        <div class="mb-3">
+            <form method="GET" action="{% url 'employee_list' %}" id="filter-form" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search-input" class="form-label">Filter by Name or Last Name</label>
+                    <input type="text" class="form-control" name="search" placeholder="Search Employees" value="{{ request.GET.search }}" id="search-input">
+                </div>
+                <div class="col-md-3">
+                    <label for="hire-date-from" class="form-label">Hire Date From</label>
+                    <input type="date" class="form-control" name="hire_date_from" value="{{ request.GET.hire_date_from }}" id="hire-date-from">
+                </div>
+                <div class="col-md-3">
+                    <label for="hire-date-to" class="form-label">Hire Date To</label>
+                    <input type="date" class="form-control" name="hire_date_to" value="{{ request.GET.hire_date_to }}" id="hire-date-to">
+                </div>
+                <div class="col-md-3">
+                    <label for="status-filter" class="form-label">Status</label>
+                    <select name="status" class="form-control" id="status-filter">
+                        <option value="">Select Status</option>
+                        <option value="Active" {% if request.GET.status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Inactive" {% if request.GET.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2" id="apply-btn" disabled>Apply Filter</button>
+                    <a href="{% url 'employee_list' %}" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
-                <thead>
+                <thead class="table-dark">
                     <tr>
                         <th>First Name</th>
                         <th>Last Name</th>
@@ -56,5 +84,26 @@ Employee List
     function confirmStatusChange() {
         return confirm("Are you sure you want to change the status of this employee?");
     }
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("search-input");
+        const hireDateFrom = document.getElementById("hire-date-from");
+        const hireDateTo = document.getElementById("hire-date-to");
+        const applyBtn = document.getElementById("apply-btn");
+
+        function checkButtonStatus() {
+            if (searchInput.value || hireDateFrom.value || hireDateTo.value || document.getElementById('status-filter').value) {
+                applyBtn.disabled = false;
+            } else {
+                applyBtn.disabled = true;
+            }
+        }
+
+        searchInput.addEventListener("input", checkButtonStatus);
+        hireDateFrom.addEventListener("change", checkButtonStatus);
+        hireDateTo.addEventListener("change", checkButtonStatus);
+        document.getElementById('status-filter').addEventListener("change", checkButtonStatus);
+
+        checkButtonStatus();
+    });
 </script>
 {% endblock %}

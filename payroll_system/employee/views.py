@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from .forms import EmployeeForm
 from .models import Employee
 from django.contrib import messages
+from django.db.models import Q
 
 def employeeList(request):
     """
@@ -17,7 +18,30 @@ def employeeList(request):
         HttpResponse: Renders the employee_list.html template with all employees.
     """
     employees = Employee.objects.all()
-    return render(request, 'employee_list.html', {'employees': employees})
+    search_query = request.GET.get('search', '')
+    if search_query:
+        employees = employees.filter(
+            Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query)
+        )
+    hire_date_from = request.GET.get('hire_date_from')
+    hire_date_to = request.GET.get('hire_date_to')
+    if hire_date_from:
+        employees = employees.filter(hire_date__gte=hire_date_from)
+    if hire_date_to:
+        employees = employees.filter(hire_date__lte=hire_date_to)
+
+    status_filter = request.GET.get('status')
+    if status_filter:
+        employees = employees.filter(status=status_filter)
+
+    return render(request, 'employee_list.html', {
+        'employees': employees,
+        'search_query': search_query,
+        'hire_date_from': hire_date_from,
+        'hire_date_to': hire_date_to,
+        'status_filter': status_filter,
+    })
+
 
 def addEmployee(request):
     """
